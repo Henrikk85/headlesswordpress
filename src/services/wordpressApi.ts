@@ -1,6 +1,8 @@
 import { Product, WordPressPost } from '../types/Product';
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://autopedant.ee/wp-json';
+const CONSUMER_KEY = process.env.REACT_APP_WOOCOMMERCE_CONSUMER_KEY;
+const CONSUMER_SECRET = process.env.REACT_APP_WOOCOMMERCE_CONSUMER_SECRET;
 
 const demoProducts: Product[] = [
   {
@@ -99,10 +101,21 @@ const demoProducts: Product[] = [
 
 export const fetchProducts = async (): Promise<Product[]> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/wc/v3/products`);
+    if (!CONSUMER_KEY || !CONSUMER_SECRET) {
+      console.log('WooCommerce API credentials not configured, using demo products');
+      return demoProducts;
+    }
+
+    const authString = btoa(`${CONSUMER_KEY}:${CONSUMER_SECRET}`);
+    const response = await fetch(`${API_BASE_URL}/wc/v3/products`, {
+      headers: {
+        'Authorization': `Basic ${authString}`,
+        'Content-Type': 'application/json',
+      },
+    });
     
     if (response.status === 401) {
-      console.log('WooCommerce API requires authentication, using demo products');
+      console.log('WooCommerce API authentication failed, using demo products');
       return demoProducts;
     }
     
@@ -111,6 +124,7 @@ export const fetchProducts = async (): Promise<Product[]> => {
     }
     
     const products = await response.json();
+    console.log('Successfully fetched products from WooCommerce API:', products.length);
     return products;
   } catch (error) {
     console.error('Error fetching products from WooCommerce API:', error);
