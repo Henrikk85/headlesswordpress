@@ -160,6 +160,55 @@ export const fetchWordPressPosts = async (): Promise<WordPressPost[]> => {
   }
 };
 
+export const fetchCategories = async (): Promise<any[]> => {
+  try {
+    if (!CONSUMER_KEY || !CONSUMER_SECRET) {
+      console.log('WooCommerce API credentials not configured, using demo categories');
+      return [
+        { id: 1, name: "Car Care", slug: "car-care", count: 10 },
+        { id: 2, name: "Accessories", slug: "accessories", count: 5 },
+        { id: 3, name: "Tire Care", slug: "tire-care", count: 3 },
+        { id: 4, name: "Interior", slug: "interior", count: 2 }
+      ];
+    }
+
+    const authString = btoa(`${CONSUMER_KEY}:${CONSUMER_SECRET}`);
+    const response = await fetch(`${API_BASE_URL}/wc/v3/products/categories`, {
+      headers: {
+        'Authorization': `Basic ${authString}`,
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    if (response.status === 401) {
+      console.log('WooCommerce API authentication failed for categories, using demo categories');
+      return [
+        { id: 1, name: "Car Care", slug: "car-care", count: 10 },
+        { id: 2, name: "Accessories", slug: "accessories", count: 5 },
+        { id: 3, name: "Tire Care", slug: "tire-care", count: 3 },
+        { id: 4, name: "Interior", slug: "interior", count: 2 }
+      ];
+    }
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const categories = await response.json();
+    console.log('Successfully fetched categories from WooCommerce API:', categories.length);
+    return categories;
+  } catch (error) {
+    console.error('Error fetching categories from WooCommerce API:', error);
+    console.log('Falling back to demo categories');
+    return [
+      { id: 1, name: "Car Care", slug: "car-care", count: 10 },
+      { id: 2, name: "Accessories", slug: "accessories", count: 5 },
+      { id: 3, name: "Tire Care", slug: "tire-care", count: 3 },
+      { id: 4, name: "Interior", slug: "interior", count: 2 }
+    ];
+  }
+};
+
 export const convertPostToProduct = (post: WordPressPost): Product => {
   return {
     id: post.id,

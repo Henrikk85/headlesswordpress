@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Header from './components/Header';
 import ProductList from './components/ProductList';
+import CategorySidebar from './components/CategorySidebar';
 import Cart from './components/Cart';
 import { useCart } from './hooks/useCart';
 import { fetchProducts } from './services/wordpressApi';
@@ -12,6 +13,7 @@ const App: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   
   const { cart, addToCart, updateQuantity, removeFromCart, clearCart, getItemQuantity } = useCart();
 
@@ -32,8 +34,18 @@ const App: React.FC = () => {
     loadProducts();
   }, []);
 
+  const filteredProducts = selectedCategory 
+    ? products.filter(product => 
+        product.categories.some(category => category.slug === selectedCategory)
+      )
+    : products;
+
   const handleAddToCart = (product: Product) => {
     addToCart(product, 1);
+  };
+
+  const handleCategorySelect = (categorySlug: string | null) => {
+    setSelectedCategory(categorySlug);
   };
 
   const toggleCart = () => {
@@ -55,13 +67,25 @@ const App: React.FC = () => {
           </div>
         </div>
         
-        <ProductList
-          products={products}
-          onAddToCart={handleAddToCart}
-          getItemQuantity={getItemQuantity}
-          loading={loading}
-          error={error}
-        />
+        <div className="products-section">
+          <div className="container">
+            <div className="products-layout">
+              <CategorySidebar 
+                selectedCategory={selectedCategory}
+                onCategorySelect={handleCategorySelect}
+              />
+              <div className="products-content">
+                <ProductList
+                  products={filteredProducts}
+                  onAddToCart={handleAddToCart}
+                  getItemQuantity={getItemQuantity}
+                  loading={loading}
+                  error={error}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
       </main>
       
       <Cart

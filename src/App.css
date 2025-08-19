@@ -129,3 +129,35 @@
     font-size: 1rem;
   }
 }
+
+.products-section {
+  padding: 60px 0;
+}
+
+.products-layout {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 40px;
+  align-items: start;
+}
+
+.products-content {
+  min-width: 0;
+}
+
+@media (max-width: 1024px) {
+  .products-layout {
+    grid-template-columns: 1fr;
+    gap: 30px;
+  }
+}
+
+@media (max-width: 768px) {
+  .products-section {
+    padding: 40px 0;
+  }
+  
+  .products-layout {
+    gap: 20px;
+  }
+}
