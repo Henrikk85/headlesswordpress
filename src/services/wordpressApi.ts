@@ -4,6 +4,10 @@ const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://autopedant.e
 const CONSUMER_KEY = process.env.REACT_APP_WOOCOMMERCE_CONSUMER_KEY;
 const CONSUMER_SECRET = process.env.REACT_APP_WOOCOMMERCE_CONSUMER_SECRET;
 
+const stripHtmlTags = (html: string): string => {
+  return html.replace(/<[^>]*>/g, '').replace(/&[^;]+;/g, ' ').trim();
+};
+
 const demoProducts: Product[] = [
   {
     id: 1,
@@ -125,7 +129,14 @@ export const fetchProducts = async (): Promise<Product[]> => {
     
     const products = await response.json();
     console.log('Successfully fetched products from WooCommerce API:', products.length);
-    return products;
+    
+    const cleanedProducts = products.map((product: any) => ({
+      ...product,
+      description: stripHtmlTags(product.description || ''),
+      short_description: stripHtmlTags(product.short_description || '')
+    }));
+    
+    return cleanedProducts;
   } catch (error) {
     console.error('Error fetching products from WooCommerce API:', error);
     console.log('Falling back to demo products');
@@ -153,8 +164,8 @@ export const convertPostToProduct = (post: WordPressPost): Product => {
   return {
     id: post.id,
     name: post.title.rendered,
-    description: post.content.rendered.replace(/<[^>]*>/g, '').substring(0, 200) + '...',
-    short_description: post.excerpt.rendered.replace(/<[^>]*>/g, '').substring(0, 100) + '...',
+    description: stripHtmlTags(post.content.rendered).substring(0, 200) + '...',
+    short_description: stripHtmlTags(post.excerpt.rendered).substring(0, 100) + '...',
     price: "25.99",
     regular_price: "25.99",
     images: [
